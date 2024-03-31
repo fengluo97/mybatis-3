@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2017 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,23 +56,27 @@ public final class MappedStatement {
   private Log statementLog;
   private LanguageDriver lang;
   private String[] resultSets;
+  private boolean dirtySelect;
 
   MappedStatement() {
     // constructor disabled
   }
 
   public static class Builder {
-    private MappedStatement mappedStatement = new MappedStatement();
+    private final MappedStatement mappedStatement = new MappedStatement();
 
     public Builder(Configuration configuration, String id, SqlSource sqlSource, SqlCommandType sqlCommandType) {
       mappedStatement.configuration = configuration;
       mappedStatement.id = id;
       mappedStatement.sqlSource = sqlSource;
       mappedStatement.statementType = StatementType.PREPARED;
-      mappedStatement.parameterMap = new ParameterMap.Builder(configuration, "defaultParameterMap", null, new ArrayList<ParameterMapping>()).build();
-      mappedStatement.resultMaps = new ArrayList<ResultMap>();
+      mappedStatement.resultSetType = ResultSetType.DEFAULT;
+      mappedStatement.parameterMap = new ParameterMap.Builder(configuration, "defaultParameterMap", null,
+          new ArrayList<>()).build();
+      mappedStatement.resultMaps = new ArrayList<>();
       mappedStatement.sqlCommandType = sqlCommandType;
-      mappedStatement.keyGenerator = configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType) ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
+      mappedStatement.keyGenerator = configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType)
+          ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
       String logId = id;
       if (configuration.getLogPrefix() != null) {
         logId = configuration.getLogPrefix() + id;
@@ -119,7 +123,7 @@ public final class MappedStatement {
     }
 
     public Builder resultSetType(ResultSetType resultSetType) {
-      mappedStatement.resultSetType = resultSetType;
+      mappedStatement.resultSetType = resultSetType == null ? ResultSetType.DEFAULT : resultSetType;
       return this;
     }
 
@@ -173,13 +177,27 @@ public final class MappedStatement {
       return this;
     }
 
-    /** @deprecated Use {@link #resultSets} */
+    public Builder dirtySelect(boolean dirtySelect) {
+      mappedStatement.dirtySelect = dirtySelect;
+      return this;
+    }
+
+    /**
+     * Resul sets.
+     *
+     * @param resultSet
+     *          the result set
+     *
+     * @return the builder
+     *
+     * @deprecated Use {@link #resultSets}
+     */
     @Deprecated
     public Builder resulSets(String resultSet) {
       mappedStatement.resultSets = delimitedStringToArray(resultSet);
       return this;
     }
-    
+
     public MappedStatement build() {
       assert mappedStatement.configuration != null;
       assert mappedStatement.id != null;
@@ -282,12 +300,22 @@ public final class MappedStatement {
     return resultSets;
   }
 
-  /** @deprecated Use {@link #getResultSets()} */
+  public boolean isDirtySelect() {
+    return dirtySelect;
+  }
+
+  /**
+   * Gets the resul sets.
+   *
+   * @return the resul sets
+   *
+   * @deprecated Use {@link #getResultSets()}
+   */
   @Deprecated
   public String[] getResulSets() {
     return resultSets;
   }
-  
+
   public BoundSql getBoundSql(Object parameterObject) {
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
@@ -312,9 +340,8 @@ public final class MappedStatement {
   private static String[] delimitedStringToArray(String in) {
     if (in == null || in.trim().length() == 0) {
       return null;
-    } else {
-      return in.split(",");
     }
+    return in.split(",");
   }
 
 }

@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2017 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,19 +13,20 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package org.apache.ibatis.reflection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ArrayUtilTest extends ArrayUtil {
+class ArrayUtilTest {
 
   @Test
-  public void testHashCode() throws Exception {
+  void testHashCode() {
     Object arr;
     arr = new long[] { 1 };
     assertEquals(Arrays.hashCode((long[]) arr), ArrayUtil.hashCode(arr));
@@ -52,7 +53,7 @@ public class ArrayUtilTest extends ArrayUtil {
   }
 
   @Test
-  public void testequals() throws Exception {
+  void testequals() {
     assertTrue(ArrayUtil.equals(new long[] { 1 }, new long[] { 1 }));
     assertTrue(ArrayUtil.equals(new int[] { 1 }, new int[] { 1 }));
     assertTrue(ArrayUtil.equals(new short[] { 1 }, new short[] { 1 }));
@@ -82,7 +83,7 @@ public class ArrayUtilTest extends ArrayUtil {
   }
 
   @Test
-  public void testToString() throws Exception {
+  void testToString() {
     Object arr;
     arr = new long[] { 1 };
     assertEquals(Arrays.toString((long[]) arr), ArrayUtil.toString(arr));
@@ -103,7 +104,7 @@ public class ArrayUtilTest extends ArrayUtil {
     arr = new Object[] { "str" };
     assertEquals(Arrays.toString((Object[]) arr), ArrayUtil.toString(arr));
 
-    assertEquals(Integer.valueOf(1).toString(), ArrayUtil.toString(1));
+    assertEquals(Integer.toString(1), ArrayUtil.toString(1));
     assertEquals("null", ArrayUtil.toString(null));
   }
 

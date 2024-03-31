@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2017 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,14 +37,12 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
   private final SqlSessionFactory sqlSessionFactory;
   private final SqlSession sqlSessionProxy;
 
-  private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<SqlSession>();
+  private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
 
   private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
     this.sqlSessionFactory = sqlSessionFactory;
-    this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
-        SqlSessionFactory.class.getClassLoader(),
-        new Class[]{SqlSession.class},
-        new SqlSessionInterceptor());
+    this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(SqlSessionFactory.class.getClassLoader(),
+        new Class[] { SqlSession.class }, new SqlSessionInterceptor());
   }
 
   public static SqlSessionManager newInstance(Reader reader) {
@@ -158,27 +156,27 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   @Override
   public <T> T selectOne(String statement) {
-    return sqlSessionProxy.<T> selectOne(statement);
+    return sqlSessionProxy.selectOne(statement);
   }
 
   @Override
   public <T> T selectOne(String statement, Object parameter) {
-    return sqlSessionProxy.<T> selectOne(statement, parameter);
+    return sqlSessionProxy.selectOne(statement, parameter);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, String mapKey) {
-    return sqlSessionProxy.<K, V> selectMap(statement, mapKey);
+    return sqlSessionProxy.selectMap(statement, mapKey);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey) {
-    return sqlSessionProxy.<K, V> selectMap(statement, parameter, mapKey);
+    return sqlSessionProxy.selectMap(statement, parameter, mapKey);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
-    return sqlSessionProxy.<K, V> selectMap(statement, parameter, mapKey, rowBounds);
+    return sqlSessionProxy.selectMap(statement, parameter, mapKey, rowBounds);
   }
 
   @Override
@@ -198,17 +196,17 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   @Override
   public <E> List<E> selectList(String statement) {
-    return sqlSessionProxy.<E> selectList(statement);
+    return sqlSessionProxy.selectList(statement);
   }
 
   @Override
   public <E> List<E> selectList(String statement, Object parameter) {
-    return sqlSessionProxy.<E> selectList(statement, parameter);
+    return sqlSessionProxy.selectList(statement, parameter);
   }
 
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
-    return sqlSessionProxy.<E> selectList(statement, parameter, rowBounds);
+    return sqlSessionProxy.selectList(statement, parameter, rowBounds);
   }
 
   @Override
@@ -333,13 +331,13 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
     try {
       sqlSession.close();
     } finally {
-      localSqlSession.set(null);
+      localSqlSession.remove();
     }
   }
 
   private class SqlSessionInterceptor implements InvocationHandler {
     public SqlSessionInterceptor() {
-        // Prevent Synthetic Access
+      // Prevent Synthetic Access
     }
 
     @Override
@@ -351,8 +349,8 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
         } catch (Throwable t) {
           throw ExceptionUtil.unwrapThrowable(t);
         }
-      } else {
-        final SqlSession autoSqlSession = openSession();
+      }
+      try (SqlSession autoSqlSession = openSession()) {
         try {
           final Object result = method.invoke(autoSqlSession, args);
           autoSqlSession.commit();
@@ -360,8 +358,6 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
         } catch (Throwable t) {
           autoSqlSession.rollback();
           throw ExceptionUtil.unwrapThrowable(t);
-        } finally {
-          autoSqlSession.close();
         }
       }
     }

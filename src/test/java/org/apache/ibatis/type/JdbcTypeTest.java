@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2015 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,24 +15,20 @@
  */
 package org.apache.ibatis.type;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Types;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JdbcTypeTest {
-  private static final String[] requiredStandardTypeNames = {
-    "ARRAY", "BIGINT", "BINARY", "BIT", "BLOB", "BOOLEAN", "CHAR", "CLOB",
-    "DATALINK", "DATE", "DECIMAL", "DISTINCT", "DOUBLE", "FLOAT", "INTEGER",
-    "JAVA_OBJECT", "LONGNVARCHAR", "LONGVARBINARY", "LONGVARCHAR", "NCHAR",
-    "NCLOB", "NULL", "NUMERIC","NVARCHAR", "OTHER", "REAL", "REF", "ROWID",
-    "SMALLINT", "SQLXML", "STRUCT", "TIME", "TIMESTAMP", "TINYINT",
-    "VARBINARY", "VARCHAR"
-  };
+class JdbcTypeTest {
+  private static final String[] requiredStandardTypeNames = { "ARRAY", "BIGINT", "BINARY", "BIT", "BLOB", "BOOLEAN",
+      "CHAR", "CLOB", "DATALINK", "DATE", "DECIMAL", "DISTINCT", "DOUBLE", "FLOAT", "INTEGER", "JAVA_OBJECT",
+      "LONGNVARCHAR", "LONGVARBINARY", "LONGVARCHAR", "NCHAR", "NCLOB", "NULL", "NUMERIC", "NVARCHAR", "OTHER", "REAL",
+      "REF", "ROWID", "SMALLINT", "SQLXML", "STRUCT", "TIME", "TIMESTAMP", "TINYINT", "VARBINARY", "VARCHAR" };
 
   @Test
-  public void shouldHaveRequiredStandardConstants() throws Exception {
+  void shouldHaveRequiredStandardConstants() throws Exception {
     for (String typeName : requiredStandardTypeNames) {
       int typeCode = Types.class.getField(typeName).getInt(null);
       JdbcType jdbcType = JdbcType.valueOf(typeName);
@@ -41,7 +37,7 @@ public class JdbcTypeTest {
   }
 
   @Test
-  public void shouldHaveDateTimeOffsetConstant() throws Exception {
+  void shouldHaveDateTimeOffsetConstant() {
     JdbcType jdbcType = JdbcType.valueOf("DATETIMEOFFSET");
     assertEquals(-155, jdbcType.TYPE_CODE);
   }

@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2016 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,35 +54,46 @@ public class SimpleExecutor extends BaseExecutor {
   }
 
   @Override
-  public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+  public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler,
+      BoundSql boundSql) throws SQLException {
+    // 创建 Statement 对象
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
-      StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler,
+          boundSql);
+      // 准备最终的语句，负责动态sql解析，参数绑定等
       stmt = prepareStatement(handler, ms.getStatementLog());
-      return handler.<E>query(stmt, resultHandler);
+      // 执行查询
+      return handler.query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
     }
   }
 
   @Override
-  protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
+  protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)
+      throws SQLException {
     Configuration configuration = ms.getConfiguration();
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    // 准备最终的语句
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
-    return handler.<E>queryCursor(stmt);
+    Cursor<E> cursor = handler.queryCursor(stmt);
+    stmt.closeOnCompletion();
+    return cursor;
   }
 
   @Override
-  public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
+  public List<BatchResult> doFlushStatements(boolean isRollback) {
     return Collections.emptyList();
   }
 
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
     Connection connection = getConnection(statementLog);
+    // StatementHandler 处理动态sql
     stmt = handler.prepare(connection, transaction.getTimeout());
+    // ParameterHandler 负责参数的绑定
     handler.parameterize(stmt);
     return stmt;
   }

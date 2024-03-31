@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2017 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 package org.apache.ibatis.scripting.xmltags;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.ibatis.parsing.GenericTokenParser;
-import org.apache.ibatis.parsing.TokenHandler;
 import org.apache.ibatis.session.Configuration;
 
 /**
@@ -29,6 +29,7 @@ public class ForEachSqlNode implements SqlNode {
 
   private final ExpressionEvaluator evaluator;
   private final String collectionExpression;
+  private final Boolean nullable;
   private final SqlNode contents;
   private final String open;
   private final String close;
@@ -37,9 +38,24 @@ public class ForEachSqlNode implements SqlNode {
   private final String index;
   private final Configuration configuration;
 
-  public ForEachSqlNode(Configuration configuration, SqlNode contents, String collectionExpression, String index, String item, String open, String close, String separator) {
+  /**
+   * @deprecated Since 3.5.9, use the
+   *             {@link #ForEachSqlNode(Configuration, SqlNode, String, Boolean, String, String, String, String, String)}.
+   */
+  @Deprecated
+  public ForEachSqlNode(Configuration configuration, SqlNode contents, String collectionExpression, String index,
+      String item, String open, String close, String separator) {
+    this(configuration, contents, collectionExpression, null, index, item, open, close, separator);
+  }
+
+  /**
+   * @since 3.5.9
+   */
+  public ForEachSqlNode(Configuration configuration, SqlNode contents, String collectionExpression, Boolean nullable,
+      String index, String item, String open, String close, String separator) {
     this.evaluator = new ExpressionEvaluator();
     this.collectionExpression = collectionExpression;
+    this.nullable = nullable;
     this.contents = contents;
     this.open = open;
     this.close = close;
@@ -52,8 +68,9 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
-    final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
-    if (!iterable.iterator().hasNext()) {
+    final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings,
+        Optional.ofNullable(nullable).orElseGet(configuration::isNullableOnForEach));
+    if (iterable == null || !iterable.iterator().hasNext()) {
       return true;
     }
     boolean first = true;
@@ -67,9 +84,9 @@ public class ForEachSqlNode implements SqlNode {
         context = new PrefixedContext(context, separator);
       }
       int uniqueNumber = context.getUniqueNumber();
-      // Issue #709 
+      // Issue #709
       if (o instanceof Map.Entry) {
-        @SuppressWarnings("unchecked") 
+        @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
@@ -117,7 +134,7 @@ public class ForEachSqlNode implements SqlNode {
   }
 
   private static String itemizeItem(String item, int i) {
-    return new StringBuilder(ITEM_PREFIX).append(item).append("_").append(i).toString();
+    return ITEM_PREFIX + item + "_" + i;
   }
 
   private static class FilteredDynamicContext extends DynamicContext {
@@ -126,7 +143,8 @@ public class ForEachSqlNode implements SqlNode {
     private final String itemIndex;
     private final String item;
 
-    public FilteredDynamicContext(Configuration configuration,DynamicContext delegate, String itemIndex, String item, int i) {
+    public FilteredDynamicContext(Configuration configuration, DynamicContext delegate, String itemIndex, String item,
+        int i) {
       super(configuration, null);
       this.delegate = delegate;
       this.index = i;
@@ -151,15 +169,12 @@ public class ForEachSqlNode implements SqlNode {
 
     @Override
     public void appendSql(String sql) {
-      GenericTokenParser parser = new GenericTokenParser("#{", "}", new TokenHandler() {
-        @Override
-        public String handleToken(String content) {
-          String newContent = content.replaceFirst("^\\s*" + item + "(?![^.,:\\s])", itemizeItem(item, index));
-          if (itemIndex != null && newContent.equals(content)) {
-            newContent = content.replaceFirst("^\\s*" + itemIndex + "(?![^.,:\\s])", itemizeItem(itemIndex, index));
-          }
-          return new StringBuilder("#{").append(newContent).append("}").toString();
+      GenericTokenParser parser = new GenericTokenParser("#{", "}", content -> {
+        String newContent = content.replaceFirst("^\\s*" + item + "(?![^.,:\\s])", itemizeItem(item, index));
+        if (itemIndex != null && newContent.equals(content)) {
+          newContent = content.replaceFirst("^\\s*" + itemIndex + "(?![^.,:\\s])", itemizeItem(itemIndex, index));
         }
+        return "#{" + newContent + "}";
       });
 
       delegate.appendSql(parser.parse(sql));
@@ -171,7 +186,6 @@ public class ForEachSqlNode implements SqlNode {
     }
 
   }
-
 
   private class PrefixedContext extends DynamicContext {
     private final DynamicContext delegate;

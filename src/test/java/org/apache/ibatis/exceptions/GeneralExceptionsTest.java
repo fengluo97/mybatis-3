@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2015 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,8 @@
  */
 package org.apache.ibatis.exceptions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -33,50 +33,40 @@ import org.apache.ibatis.scripting.ScriptingException;
 import org.apache.ibatis.session.SqlSessionException;
 import org.apache.ibatis.transaction.TransactionException;
 import org.apache.ibatis.type.TypeException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GeneralExceptionsTest {
+class GeneralExceptionsTest {
 
   private static final String EXPECTED_MESSAGE = "Test Message";
   private static final Exception EXPECTED_CAUSE = new Exception("Nested Exception");
 
   @Test
-  public void should() {
+  void should() {
     RuntimeException thrown = ExceptionFactory.wrapException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
-    assertTrue("Exception should be wrapped in RuntimeSqlException.", thrown instanceof PersistenceException);
+    assertTrue(thrown instanceof PersistenceException, "Exception should be wrapped in RuntimeSqlException.");
     testThrowException(thrown);
   }
 
   @Test
-  public void shouldInstantiateAndThrowAllCustomExceptions() throws Exception {
-    Class<?>[] exceptionTypes = {
-        BindingException.class,
-        CacheException.class,
-        DataSourceException.class,
-        ExecutorException.class,
-        LogException.class,
-        ParsingException.class,
-        BuilderException.class,
-        PluginException.class,
-        ReflectionException.class,
-        PersistenceException.class,
-        SqlSessionException.class,
-        TransactionException.class,
-        TypeException.class, 
-        ScriptingException.class
-    };
+  void shouldInstantiateAndThrowAllCustomExceptions() throws Exception {
+    Class<?>[] exceptionTypes = { BindingException.class, CacheException.class, DataSourceException.class,
+        ExecutorException.class, LogException.class, ParsingException.class, BuilderException.class,
+        PluginException.class, ReflectionException.class, PersistenceException.class, SqlSessionException.class,
+        TransactionException.class, TypeException.class, ScriptingException.class };
     for (Class<?> exceptionType : exceptionTypes) {
       testExceptionConstructors(exceptionType);
     }
 
   }
 
-  private void testExceptionConstructors(Class<?> exceptionType) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-    Exception e = (Exception) exceptionType.newInstance();
+  private void testExceptionConstructors(Class<?> exceptionType)
+      throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    Exception e = (Exception) exceptionType.getDeclaredConstructor().newInstance();
     testThrowException(e);
     e = (Exception) exceptionType.getConstructor(String.class).newInstance(EXPECTED_MESSAGE);
     testThrowException(e);
-    e = (Exception) exceptionType.getConstructor(String.class, Throwable.class).newInstance(EXPECTED_MESSAGE, EXPECTED_CAUSE);
+    e = (Exception) exceptionType.getConstructor(String.class, Throwable.class).newInstance(EXPECTED_MESSAGE,
+        EXPECTED_CAUSE);
     testThrowException(e);
     e = (Exception) exceptionType.getConstructor(Throwable.class).newInstance(EXPECTED_CAUSE);
     testThrowException(e);

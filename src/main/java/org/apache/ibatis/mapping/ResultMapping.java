@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2016 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ public class ResultMapping {
   }
 
   public static class Builder {
-    private ResultMapping resultMapping = new ResultMapping();
+    private final ResultMapping resultMapping = new ResultMapping();
 
     public Builder(Configuration configuration, String property, String column, TypeHandler<?> typeHandler) {
       this(configuration, property);
@@ -67,8 +67,8 @@ public class ResultMapping {
     public Builder(Configuration configuration, String property) {
       resultMapping.configuration = configuration;
       resultMapping.property = property;
-      resultMapping.flags = new ArrayList<ResultFlag>();
-      resultMapping.composites = new ArrayList<ResultMapping>();
+      resultMapping.flags = new ArrayList<>();
+      resultMapping.composites = new ArrayList<>();
       resultMapping.lazy = configuration.isLazyLoadingEnabled();
     }
 
@@ -131,7 +131,7 @@ public class ResultMapping {
       resultMapping.lazy = lazy;
       return this;
     }
-    
+
     public ResultMapping build() {
       // lock down collections
       resultMapping.flags = Collections.unmodifiableList(resultMapping.flags);
@@ -144,14 +144,17 @@ public class ResultMapping {
     private void validate() {
       // Issue #697: cannot define both nestedQueryId and nestedResultMapId
       if (resultMapping.nestedQueryId != null && resultMapping.nestedResultMapId != null) {
-        throw new IllegalStateException("Cannot define both nestedQueryId and nestedResultMapId in property " + resultMapping.property);
+        throw new IllegalStateException(
+            "Cannot define both nestedQueryId and nestedResultMapId in property " + resultMapping.property);
       }
       // Issue #5: there should be no mappings without typehandler
-      if (resultMapping.nestedQueryId == null && resultMapping.nestedResultMapId == null && resultMapping.typeHandler == null) {
+      if (resultMapping.nestedQueryId == null && resultMapping.nestedResultMapId == null
+          && resultMapping.typeHandler == null) {
         throw new IllegalStateException("No typehandler found for property " + resultMapping.property);
       }
       // Issue #4 and GH #39: column is optional only in nested resultmaps but not in the rest
-      if (resultMapping.nestedResultMapId == null && resultMapping.column == null && resultMapping.composites.isEmpty()) {
+      if (resultMapping.nestedResultMapId == null && resultMapping.column == null
+          && resultMapping.composites.isEmpty()) {
         throw new IllegalStateException("Mapping is missing column attribute for property " + resultMapping.property);
       }
       if (resultMapping.getResultSet() != null) {
@@ -164,11 +167,12 @@ public class ResultMapping {
           numForeignColumns = resultMapping.foreignColumn.split(",").length;
         }
         if (numColumns != numForeignColumns) {
-          throw new IllegalStateException("There should be the same number of columns and foreignColumns in property " + resultMapping.property);
+          throw new IllegalStateException(
+              "There should be the same number of columns and foreignColumns in property " + resultMapping.property);
         }
       }
     }
-    
+
     private void resolveTypeHandler() {
       if (resultMapping.typeHandler == null && resultMapping.javaType != null) {
         Configuration configuration = resultMapping.configuration;
@@ -250,7 +254,11 @@ public class ResultMapping {
   public void setLazy(boolean lazy) {
     this.lazy = lazy;
   }
-  
+
+  public boolean isSimple() {
+    return this.nestedResultMapId == null && this.nestedQueryId == null && this.resultSet == null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -262,18 +270,15 @@ public class ResultMapping {
 
     ResultMapping that = (ResultMapping) o;
 
-    if (property == null || !property.equals(that.property)) {
-      return false;
-    }
-
-    return true;
+    return property != null && property.equals(that.property);
   }
 
   @Override
   public int hashCode() {
     if (property != null) {
       return property.hashCode();
-    } else if (column != null) {
+    }
+    if (column != null) {
       return column.hashCode();
     } else {
       return 0;
@@ -283,12 +288,12 @@ public class ResultMapping {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("ResultMapping{");
-    //sb.append("configuration=").append(configuration); // configuration doesn't have a useful .toString()
+    // sb.append("configuration=").append(configuration); // configuration doesn't have a useful .toString()
     sb.append("property='").append(property).append('\'');
     sb.append(", column='").append(column).append('\'');
     sb.append(", javaType=").append(javaType);
     sb.append(", jdbcType=").append(jdbcType);
-    //sb.append(", typeHandler=").append(typeHandler); // typeHandler also doesn't have a useful .toString()
+    // sb.append(", typeHandler=").append(typeHandler); // typeHandler also doesn't have a useful .toString()
     sb.append(", nestedResultMapId='").append(nestedResultMapId).append('\'');
     sb.append(", nestedQueryId='").append(nestedQueryId).append('\'');
     sb.append(", notNullColumns=").append(notNullColumns);

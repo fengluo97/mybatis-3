@@ -1,11 +1,11 @@
-/**
- *    Copyright 2009-2015 the original author or authors.
+/*
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,14 +28,14 @@ import org.apache.ibatis.type.TypeHandler;
 
 public class UserStateTypeHandler<E> implements TypeHandler<Object> {
 
-  private static Map<String, String> lookup;
+  private static final Map<String, String> lookup;
 
   static {
-    lookup = new HashMap<String, String>();
+    lookup = new HashMap<>();
     lookup.put("0", "INACTIVE");
     lookup.put("1", "ACTIVE");
   }
-  
+
   UserStateTypeHandler() {
     // can only be constructed from this package
   }
@@ -64,7 +64,7 @@ public class UserStateTypeHandler<E> implements TypeHandler<Object> {
         key = entry.getKey();
       }
     }
-    ps.setInt(i, Integer.valueOf(key));
+    ps.setInt(i, Integer.parseInt(key));
   }
 
   private String lookupValue(int val) {
